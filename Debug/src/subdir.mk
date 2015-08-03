@@ -5,14 +5,17 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/BLE__HCI.cpp \
+../src/HCI_3WireUART.cpp \
 ../src/HCI_Base.cpp 
 
 OBJS += \
 ./src/BLE__HCI.o \
+./src/HCI_3WireUART.o \
 ./src/HCI_Base.o 
 
 CPP_DEPS += \
 ./src/BLE__HCI.d \
+./src/HCI_3WireUART.d \
 ./src/HCI_Base.d 
 
 
