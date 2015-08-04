@@ -9,6 +9,7 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir.mk
+-include src/HCI_Utils/subdir.mk
 -include src/subdir.mk
 -include objects.mk
 
@@ -38,19 +39,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: BLE__HCI
+all: BLE_HCI_git
 
 # Tool invocations
-BLE__HCI: $(OBJS) $(USER_OBJS)
+BLE_HCI_git: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MacOS X C++ Linker'
-	g++  -o "BLE__HCI" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++  -o "BLE_HCI_git" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(C++_DEPS)$(OBJS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) BLE__HCI
+	-$(RM) $(C++_DEPS)$(OBJS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) BLE_HCI_git
 	-@echo ' '
 
 .PHONY: all clean dependents

@@ -37,12 +37,19 @@ public:
 		HCI_VENDOR=14,HCI_LINKCTRL=15
 	} eHCI_PACKET_TYPE;
 
+	static int const HCI_CMDPkg_Gen_PADDING=3;//CMD package header length=3
+	static int const HCI_ACLPkg_Gen_PADDING=4;//CMD package header length=3
 	//note: paramL is the length in bytes, not the number of params
 	//each param may not have the same size
 	static int HCI_CMDPkg_Gen(uchar* buffer, int buffMaxL, uint16_t OPCode,
-			uchar paramL, uchar* params);
-	static uchar* HCI_Pkg_ACL(uchar* buffer, int buffMaxL, uint16_t handle, uchar PB,
-			uchar BC, int dataL, uchar* data);//TODO
+			 uchar* params,uchar paramL);
+	static int HCI_ACLPkg_Gen(uchar* buffer, int buffMaxL, uint16_t handle, uchar PB,
+			uchar BC,  uchar* data,uint16_t dataL);//TO BE CONT
+
+
+
+
+
 
 
 	typedef union Header_3WireUart {
@@ -62,7 +69,6 @@ public:
 	 *
 	 */
 	static int const HCI_3WUART_HEADERSIZE=sizeof(Header_3WireUart);
-	static int const HCI_CMDPkg_Gen_PADDING=3;//CMD package header length=3
 
 
 	static int HCI_3WUART_PK(uchar* buffer, int buffMaxL,
@@ -119,7 +125,7 @@ public:
 
 
 
-	static int HCI_SLIP_DEC_ByteFeed(SLIP_DEC_Info *SLIPInfo,uchar incomingByte);//TODO
+	static int HCI_SLIP_DEC_ByteFeed(SLIP_DEC_Info *SLIPInfo,uchar incomingByte);
 
 
 	static uint16_t Calculate_CRC_CCITT(const  uchar* buffer, int size);

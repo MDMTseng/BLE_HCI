@@ -15,7 +15,7 @@
  *
  */
 int HCI_Base::HCI_CMDPkg_Gen(uchar* buffer, int buffMaxL, uint16_t OPCode,
-		uchar paramL, uchar* params) {
+		uchar* params, uchar paramL) {
 
 	if (buffMaxL < HCI_CMDPkg_Gen_PADDING + paramL)
 		return -1;
@@ -31,6 +31,16 @@ int HCI_Base::HCI_CMDPkg_Gen(uchar* buffer, int buffMaxL, uint16_t OPCode,
 	return HCI_CMDPkg_Gen_PADDING + paramL;
 }
 
+int HCI_Base::HCI_ACLPkg_Gen(uchar* buffer, int buffMaxL, uint16_t handle,
+		uchar PB, uchar BC, uchar* data, uint16_t dataL) {//TO BE CONT
+	if (buffMaxL < dataL + HCI_ACLPkg_Gen_PADDING)
+		return -1;
+	if (data != buffer + HCI_ACLPkg_Gen_PADDING)
+		memcpy(buffer + HCI_ACLPkg_Gen_PADDING, data, dataL);
+
+	return -1;
+
+}
 /*
  * HCI_SLIP_ENC is to stuffing a packet
  *
@@ -106,77 +116,75 @@ int HCI_Base::HCI_SLIP_ENC(uchar* buffer, int buffMaxL, uchar* rawPkg,
 
 }
 
-int HCI_Base::HCI_SLIP_DEC_ByteFeed(SLIP_DEC_Info *SLIPInfo,uchar incomingByte)
-{
-	if(SLIPInfo==NULL)return -1;
-	if(SLIPInfo->buffer==NULL)return -2;
-
+int HCI_Base::HCI_SLIP_DEC_ByteFeed(SLIP_DEC_Info *SLIPInfo, uchar incomingByte) {
+	if (SLIPInfo == NULL)
+		return -1;
+	if (SLIPInfo->buffer == NULL)
+		return -2;
 
 	//printf("_%02X::%d\n",incomingByte,SLIPInfo->state);
-	switch(SLIPInfo->state)
-	{
+	switch (SLIPInfo->state) {
 	case SLIP_DEC_Info::init://initial state: wait for 0xC0
-		if(incomingByte==0xC0)SLIPInfo->state=SLIP_DEC_Info::ready;
-		SLIPInfo->packL=0;
+		if (incomingByte == 0xC0)
+			SLIPInfo->state = SLIP_DEC_Info::ready;
+		SLIPInfo->packL = 0;
 		break;
 	case SLIP_DEC_Info::ready://ready state: wait for 0xC0 again
-		if(incomingByte==0xC0)SLIPInfo->state= SLIP_DEC_Info::recv;
-		else SLIPInfo->state=SLIP_DEC_Info::init;//0xC0 should always appear in a pair
-		SLIPInfo->packL=0;
+		if (incomingByte == 0xC0)
+			SLIPInfo->state = SLIP_DEC_Info::recv;
+		else
+			SLIPInfo->state = SLIP_DEC_Info::init;//0xC0 should always appear in a pair
+		SLIPInfo->packL = 0;
 		break;
 	case SLIP_DEC_Info::recv://RECV state: push incomingByte into the buffer
-		if(incomingByte==0xDB)SLIPInfo->state=SLIP_DEC_Info::escape;
-		else if(incomingByte==0xC0)
-		{//the end of the package
-			SLIPInfo->state= SLIP_DEC_Info::ready;
+		if (incomingByte == 0xDB)
+			SLIPInfo->state = SLIP_DEC_Info::escape;
+		else if (incomingByte == 0xC0) {//the end of the package
+			SLIPInfo->state = SLIP_DEC_Info::ready;
 			return SLIPInfo->packL;
-		}
-		else
-		{
-			SLIPInfo->buffer[SLIPInfo->packL]=incomingByte;
+		} else {
+			SLIPInfo->buffer[SLIPInfo->packL] = incomingByte;
 			SLIPInfo->packL++;
 		}
 		break;
 
-
 	case SLIP_DEC_Info::escape:
 		//escape state:
 		/*
-			 * 0xDB,0xDC= 0xC0
-			 * 0xDB,0xDD= 0xDB
-			 * 0xDB,0xDE= 0x11
-			 * 0xDB,0xDF= 0x13
+		 * 0xDB,0xDC= 0xC0
+		 * 0xDB,0xDD= 0xDB
+		 * 0xDB,0xDE= 0x11
+		 * 0xDB,0xDF= 0x13
 		 */
-		switch(incomingByte)
-		{
-		case 0xDC:incomingByte=0xC0;break;
-		case 0xDD:incomingByte=0xDB;break;
-		case 0xDE:incomingByte=0x11;break;
-		case 0xDF:incomingByte=0x13;break;
+		switch (incomingByte) {
+		case 0xDC:
+			incomingByte = 0xC0;
+			break;
+		case 0xDD:
+			incomingByte = 0xDB;
+			break;
+		case 0xDE:
+			incomingByte = 0x11;
+			break;
+		case 0xDF:
+			incomingByte = 0x13;
+			break;
 
-		default:SLIPInfo->state=SLIP_DEC_Info::init; return -3;//shouldn't happen: reset the state
+		default:
+			SLIPInfo->state = SLIP_DEC_Info::init;
+			return -3;//shouldn't happen: reset the state
 
 		}
 
-		SLIPInfo->buffer[SLIPInfo->packL]=incomingByte;
+		SLIPInfo->buffer[SLIPInfo->packL] = incomingByte;
 		SLIPInfo->packL++;
-		SLIPInfo->state=SLIP_DEC_Info::recv;
+		SLIPInfo->state = SLIP_DEC_Info::recv;
 		break;
-
-
-
-
-
-
-
 
 	}
 
 	return 0;
 }
-
-
-
 
 /*
  *
@@ -240,31 +248,32 @@ int HCI_Base::HCI_3WUART_PK(uchar* buffer, int buffMaxL, uint32_t headerCode,
 	return payloadL + HCI_3WUART_HEADERSIZE + 2;
 }
 
+int HCI_Base::HCI_3WUART_UNPK(uchar* inputPack, int inputPackL,
+		Header_3WireUart* header, uchar** payload) {
 
-int HCI_Base::HCI_3WUART_UNPK(uchar* inputPack, int inputPackL,Header_3WireUart* header , uchar** payload) {
+	Header_3WireUart *inHeader = (Header_3WireUart *) inputPack;
 
-	Header_3WireUart *inHeader=(Header_3WireUart *)inputPack;
+	uchar checkSum = 0xFF ^ inHeader->_4bytes[0] ^ inHeader->_4bytes[1]
+			^ inHeader->_4bytes[2];
+	if (checkSum != inHeader->elements.headerChecksum)
+		return -1;
+	if (inHeader->elements.dataIntegrity) {
+		uint16_t CRC = Calculate_CRC_CCITT(inputPack,
+				inputPackL - sizeof(uint16_t));
 
-	uchar checkSum= 0xFF ^ inHeader->_4bytes[0]
-				^ inHeader->_4bytes[1] ^ inHeader->_4bytes[2];
-	if(checkSum!=inHeader->elements.headerChecksum)return -1;
-	if(inHeader->elements.dataIntegrity)
-	{
-		uint16_t CRC=Calculate_CRC_CCITT(inputPack,inputPackL-sizeof(uint16_t));
+		/*((uint16_t*) (buffer + payloadL + HCI_3WUART_HEADERSIZE))
+		 = Calculate_CRC_CCITT(buffer, payloadL + HCI_3WUART_HEADERSIZE);*/
 
-	/*((uint16_t*) (buffer + payloadL + HCI_3WUART_HEADERSIZE))
-				= Calculate_CRC_CCITT(buffer, payloadL + HCI_3WUART_HEADERSIZE);*/
-
-		uint16_t inCRC=*((uint16_t*)(inputPack+inputPackL-sizeof(uint16_t)));
-		if(CRC!=inCRC)return -2;
+		uint16_t inCRC = *((uint16_t*) (inputPack + inputPackL
+				- sizeof(uint16_t)));
+		if (CRC != inCRC)
+			return -2;
 	}
 
-
-	*payload=inputPack+HCI_3WUART_HEADERSIZE;
-	*header=*inHeader;
+	*payload = inputPack + HCI_3WUART_HEADERSIZE;
+	*header = *inHeader;
 	return header->elements.payloadL;
 }
-
 
 uint16_t const CRC_CCITT_TABLE[256] = { 0x0000, 0x1189, 0x2312, 0x329b, 0x4624,
 		0x57ad, 0x6536, 0x74bf, 0x8c48, 0x9dc1, 0xaf5a, 0xbed3, 0xca6c, 0xdbe5,
